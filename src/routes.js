@@ -1,15 +1,15 @@
 const express = require("express")
-const db = require('./config/db')
+const router = express.Router();
+const controller = require('./controllers/clienteController')
 
-const app = express.Router();
+module.exports = router;
 
-app.post("/customer", (request, response) => {
+router.get("/clientes", controller.getAll)
+router.post("/cliente", controller.create)
+router.patch("/cliente/:id", controller.update)
+router.delete("/cliente/:id", controller.delete)
 
-})
+router.get("/health", (request, response) => {
+    response.send("Up");
+},)
 
-
-app.get("/clientes", async (request, response) => {
-    const outputCliente = await db.query("SELECT * FROM public.cliente")
-    response.send(outputCliente.rows)
-})
-module.exports = app;
