@@ -13,10 +13,39 @@ async function createTables(){
 
     INSERT INTO public.cliente (nome,dataNascimento,numeroDocumento,genero,numeroTelefone, status, email) VALUES ('Lais Nair Joana Dias','1994-03-02','899.841.760-02','Feminino','(11) 99886-82232', 'INATIVO', 'laisdias@outlook.com');
 
-    CREATE TABLE endereco ( enderecoId SERIAL PRIMARY KEY, clienteId INTEGER REFERENCES cliente (clienteId), apelido VARCHAR(50) NOT NULL, tipoResidencia VARCHAR(20) NOT NULL, tipoLogradouro VARCHAR(20) NOT NULL, logradouro VARCHAR(100) NOT NULL, numero varchar(20) NOT NULL, bairro varchar(100) NOT NULL, city VARCHAR(100) NOT NULL, estado VARCHAR(100) NOT NULL, pais VARCHAR(100) NOT NULL, cep VARCHAR(100) NOT NULL, observacoes VARCHAR(255));
+    CREATE TABLE endereco ( endereco_id SERIAL PRIMARY KEY,  clienteId INTEGER NOT NULL REFERENCES cliente (clienteId) ON DELETE RESTRICT, apelido VARCHAR(255) NOT NULL, tipo_residencia VARCHAR(255) NOT NULL, tipo_logradouro VARCHAR(255) NOT NULL, logradouro VARCHAR(255) NOT NULL, numero VARCHAR(20) NOT NULL, bairro VARCHAR(255) NOT NULL, cidade VARCHAR(255) NOT NULL, estado VARCHAR(255) NOT NULL, pais VARCHAR(255) NOT NULL, cep VARCHAR(20) NOT NULL, observacoes TEXT, entrega_padrao BOOLEAN DEFAULT FALSE, cobranca_padrao BOOLEAN DEFAULT FALSE, residencial_padrao BOOLEAN DEFAULT FALSE);
 
-    INSERT INTO public.endereco ( clienteId, apelido, tipoResidencia, tipoLogradouro, logradouro, numero, bairro, city, estado, pais, cep, observacoes) VALUES ( 1, 'Casa', 'Casa', 'Rua', 'Rua das Flores', '123', 'Jardim das Oliveiras', 'São Paulo', 'São Paulo', 'Brasil', '12345-678', 'Próximo à padaria');
+    INSERT INTO endereco (clienteId, apelido, tipo_residencia, tipo_logradouro, logradouro, numero, bairro, cidade, estado, pais, cep, observacoes, entrega_padrao, cobranca_padrao, residencial_padrao) VALUES (1, 'Casa Principal', 'Casa', 'Rua', 'Rua Principal', '123', 'Centro', 'São Paulo', 'SP', 'Brasil', '01234-567', 'Próximo à praça', TRUE, TRUE, TRUE);
+
+    INSERT INTO endereco (clienteId, apelido, tipo_residencia, tipo_logradouro, logradouro, numero, bairro, cidade, estado, pais, cep, observacoes, entrega_padrao, cobranca_padrao, residencial_padrao) VALUES (2, 'Escritório', 'Casa', 'Avenida', 'Avenida Paulista', '1000', 'Bela Vista', 'São Paulo', 'SP', 'Brasil', '01234-567', 'Próximo à estação de metrô', TRUE, TRUE, TRUE);
+
+    INSERT INTO endereco (clienteId, apelido, tipo_residencia, tipo_logradouro, logradouro, numero, bairro, cidade, estado, pais, cep, observacoes, entrega_padrao, cobranca_padrao, residencial_padrao) VALUES (3, 'Cobrança', 'Apartamento', 'Rua', 'Rua das Flores', '456', 'Jardim das Flores', 'São Paulo', 'SP', 'Brasil', '01234-567', 'Próximo ao supermercado', TRUE, TRUE, TRUE);
+
+    INSERT INTO endereco (clienteId, apelido, tipo_residencia, tipo_logradouro, logradouro, numero, bairro, cidade, estado, pais, cep, observacoes, entrega_padrao, cobranca_padrao, residencial_padrao) VALUES (4, 'Casa Nova', 'Casa', 'Rua', 'Rua das Palmeiras', '789', 'Jardim das Palmeiras', 'Rio de Janeiro', 'RJ', 'Brasil', '12345-678', NULL, TRUE, TRUE, TRUE);
     
+    CREATE OR REPLACE FUNCTION atualiza_padrao() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (NEW.entrega_padrao = TRUE) THEN
+            UPDATE endereco SET entrega_padrao = FALSE WHERE clienteId = NEW.clienteId AND endereco_id <> NEW.endereco_id AND EXISTS (SELECT 1 FROM endereco WHERE clienteId = NEW.clienteId AND endereco_id <> NEW.endereco_id AND entrega_padrao <> FALSE);
+        END IF;
+    
+        IF (NEW.cobranca_padrao = TRUE) THEN
+            UPDATE endereco SET cobranca_padrao = FALSE WHERE clienteId = NEW.clienteId AND endereco_id <> NEW.endereco_id AND EXISTS (SELECT 1 FROM endereco WHERE clienteId = NEW.clienteId AND endereco_id <> NEW.endereco_id AND cobranca_padrao <> FALSE);
+        END IF;
+    
+        IF (NEW.residencial_padrao = TRUE) THEN
+            UPDATE endereco SET residencial_padrao = FALSE WHERE clienteId = NEW.clienteId AND endereco_id <> NEW.endereco_id AND EXISTS (SELECT 1 FROM endereco WHERE clienteId = NEW.clienteId AND endereco_id <> NEW.endereco_id AND residencial_padrao <> FALSE);
+        END IF;
+    
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    
+    CREATE TRIGGER padrao_trigger
+    BEFORE INSERT OR UPDATE ON endereco
+    FOR EACH ROW
+    EXECUTE FUNCTION atualiza_padrao();
+
     `
 
     db.query(sql)
