@@ -12,7 +12,8 @@ router.delete("/cliente/:id", controller.delete)
 
 router.post("/endereco", controllerEndereco.create)
 router.get("/clientes/:clienteId/enderecos", controllerEndereco.getAllByCliente)
-router.get("/clientes/:clienteId/enderecos/:enderecoId", controllerEndereco.getAllByCliente)
+router.get("/clientes/:clienteId/enderecos/:enderecoId", controllerEndereco.getOneByClient)
+router.patch("/clientes/:clienteId/enderecos/:enderecoId", controllerEndereco.update)
 router.delete("/clientes/:clienteId/enderecos/:enderecoId", controllerEndereco.delete)
 
 

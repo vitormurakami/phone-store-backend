@@ -15,6 +15,11 @@ module.exports = {
         response.status(200).send(outputEndereco);
     },
 
+    update: async(request, response) => {
+        await Endereco.update(request.body, request.params.clienteId, request.params.enderecoId);
+        response.status(200).send();
+    },
+
     delete: async (request, response, next) => {
         try {
             await Endereco.delete(request.params.clienteId,request.params.enderecoId);

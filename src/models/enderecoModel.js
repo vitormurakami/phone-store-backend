@@ -17,6 +17,14 @@ Endereco.getOneByClient = async(clienteId, enderecoId) => {
     return (await db.query(`SELECT * FROM public.endereco WHERE clienteid = ${clienteId} AND endereco_id = ${enderecoId}`)).rows 
 }
 
+Endereco.update = async(fieldsToUpdate, clienteId, enderecoId) => {  
+
+    const query = `UPDATE endereco SET ${Object.keys(fieldsToUpdate).map((key, i) => `${key}=$${i + 1}`).join(',')} WHERE endereco_id=$${Object.keys(fieldsToUpdate).length + 1} AND clienteid=$${Object.keys(fieldsToUpdate).length + 2}`;
+    const values = [...Object.values(fieldsToUpdate), enderecoId, clienteId];
+
+  await db.query(query, values)
+}
+
 Endereco.delete = async (clienteId, enderecoId) => {
     return await db.query(`DELETE FROM public.endereco WHERE clienteid = ${clienteId} AND endereco_id = ${enderecoId}`);
 };
