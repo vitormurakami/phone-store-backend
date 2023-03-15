@@ -6,9 +6,10 @@ const controllerEndereco = require('./controllers/enderecoController')
 module.exports = router;
 
 router.get("/clientes", controller.getAll)
-router.post("/cliente", controller.create)
-router.patch("/cliente/:id", controller.update)
-router.delete("/cliente/:id", controller.delete)
+router.get("/clientes/:id", controller.getOneById)
+router.post("/clientes", controller.create)
+router.patch("/clientes/:id", controller.update)
+router.delete("/clientes/:id", controller.delete)
 
 router.post("/endereco", controllerEndereco.create)
 router.get("/clientes/:clienteId/enderecos", controllerEndereco.getAllByCliente)
