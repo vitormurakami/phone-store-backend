@@ -1,12 +1,12 @@
 const express = require('express');
-const ecommerceRoutes = require("./routes")
+const routes = require("./routes")
 const app = express()
 const bodyParser = require('body-parser');
 const cors = require('cors')
 
 app.use(cors())
 app.use(express.json())
-app.use(ecommerceRoutes)
+app.use(routes)
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

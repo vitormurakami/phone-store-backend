@@ -3,11 +3,14 @@ const db = require('./db')
 async function dropTables(){
 
     const sql = `
-      DROP TABLE public.endereco;
-      DROP TABLE public.cliente;
+      DROP TABLE IF EXISTS public.endereco;
+      DROP TABLE IF EXISTS public.cliente;
+      DROP TABLE IF EXISTS public.admin;
 
       DROP TRIGGER IF EXISTS padrao_trigger ON endereco;
       DROP FUNCTION IF EXISTS atualiza_padrao();
+      DROP TYPE IF EXISTS status_cliente;
+
     `
 
     db.query(sql)
