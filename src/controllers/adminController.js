@@ -45,7 +45,7 @@ module.exports = {
     activateCustomer: async (request, response) => {
         try{
             await Admin.activateCustomer(request.params.customerId);
-            response.status(200).send();
+            response.status(200).send({success: "Cliente Ativado"});
         } catch (error) {
             console.error(error);
             response.status(500).send({error: 'Ocorreu um erro ao ativar cliente.'})
@@ -55,7 +55,7 @@ module.exports = {
     inactivateCustomer: async (request, response) => {
         try{
             await Admin.inactivateCustomer(request.params.customerId);
-            response.status(200).send();
+            response.status(200).send({success: "Cliente Inavitado"});
         } catch (error) {
             console.error(error);
             response.status(500).send({error: 'Ocorreu um erro ao inativar cliente.'})

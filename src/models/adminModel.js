@@ -3,39 +3,59 @@ const db = require("../config/db");
 const Admin = {};
 
 Admin.login = async(credential) => {
-    const query = `SELECT admin_id FROM admin WHERE email = $1 AND password = $2`;
-    const value = [`${credential.email}`, `${credential.password}`]
+    const query = `SELECT adm_id FROM admins WHERE adm_email = $1 AND adm_senha = $2`;
+    const value = [`${credential.email}`, `${credential.senha}`]
 
     return await db.query(query,value);
 }
 
 Admin.getCustomersByFilters = async (filters) => {
-    const { cliente_id, nome, data_nascimento_max, data_nascimento_min, numero_documento, genero, numero_telefone, status_ativo, status_inativo, email } = filters;
+    const { clienteId, nome, dataNascimentoMax, dataNascimentoMin, cpf, genero, telefone, statusAtivo, statusInativo, email } = filters;
 
-    let sql = "SELECT cliente_id, nome, genero, to_char(data_nascimento, 'DD-MM-YYYY') as data_nascimento, status FROM cliente WHERE 1=1";
+    let sql = `
+        SELECT 
+            cli_id as "clienteId",
+            cli_nome as "nome", 
+            cli_genero as "genero", 
+            to_char(cli_dt_nascimento, 'DD/MM/YYYY') as "dataNascimento", 
+            cli_status as "status" 
+        FROM 
+            clientes WHERE 1=1`;
 
-    if (cliente_id) sql += ` cliente_id LIKE '%${cliente_id}%'`
-    if (nome) sql += ` AND nome ILIKE '%${nome}%'`;
-    if (data_nascimento_min) sql += ` AND data_nascimento >= '${data_nascimento_min}'`;
-    if (data_nascimento_max) sql += ` AND data_nascimento <= '${data_nascimento_max}'`;
-    if (numero_documento) sql += ` AND numero_documento ILIKE '%${numero_documento}%'`;
-    if (genero) sql += ` AND genero = '${genero}'`;
-    if (numero_telefone) sql += ` AND numero_telefone = '${numero_telefone}'`;
-    if (status_ativo && status_inativo) {
-        sql += " AND status = 'ATIVO' OR status = 'INATIVO'"
-    } else if (status_ativo) {
-        sql += " AND status = 'ATIVO'"
-    } else if (status_inativo) {
-        sql += " AND status = 'INATIVO'"
+    if (clienteId) sql += ` AND cli_id ='${clienteId}'`
+    if (nome) sql += ` AND cli_nome ILIKE '%${nome}%'`;
+    if (dataNascimentoMin) sql += ` AND cli_dt_nascimento >= '${dataNascimentoMin}'`;
+    if (dataNascimentoMax) sql += ` AND cli_dt_nascimento <= '${dataNascimentoMax}'`;
+    if (cpf) sql += ` AND cli_cpf ILIKE '%${cpf}%'`;
+    if (genero) sql += ` AND cli_genero = '${genero}'`;
+    if (telefone) sql += ` AND cli_telefone = '${telefone}'`;
+    if (statusAtivo && statusInativo) {
+        sql += " AND cli_status = 'Ativo' OR cli_status = 'Inativo'"
+    } else if (statusAtivo) {
+        sql += " AND cli_status = 'Ativo'"
+    } else if (statusInativo) {
+        sql += " AND cli_status = 'Inativo'"
     };
-    if (email) sql += ` AND email LIKE '%${email}%'`;
+    if (email) sql += ` AND cli_email LIKE '%${email}%'`;
 
     return await db.query(sql);
 };
 
 Admin.geCustomerById = async(id) => {
     const query = {
-        text: "SELECT cliente_id, nome, status, to_char(data_nascimento, 'DD-MM-YYYY'), genero, numero_documento, email, numero_telefone FROM public.cliente WHERE cliente_id = $1",
+        text: `
+        SELECT 
+            cli_id as "clienteId", 
+            cli_nome as "nome", 
+            cli_status as "status", 
+            to_char(cli_dt_nascimento, 'DD-MM-YYYY') as "dataNascimento", 
+            cli_genero as "genero", 
+            cli_cpf as "cpf", 
+            cli_email as "email", 
+            cli_telefone as "telefone"
+        FROM 
+            public.clientes WHERE cli_id = $1
+        `,
         values: [id],
     };
     const result = await db.query(query);
@@ -44,7 +64,7 @@ Admin.geCustomerById = async(id) => {
 
 Admin.activateCustomer = async(id) => {
     const query = {
-        text: "UPDATE public.cliente SET status='ACTIVE' WHERE cliente_id = $1;",
+        text: "UPDATE public.clientes SET cli_status='Ativo' WHERE cli_id = $1;",
         values: [id],
     };
     await db.query(query);
@@ -52,7 +72,7 @@ Admin.activateCustomer = async(id) => {
 
 Admin.inactivateCustomer = async(id) => {
     const query = {
-        text: "UPDATE public.cliente SET status='INACTIVE' WHERE cliente_id = $1;",
+        text: "UPDATE public.clientes SET cli_status='Inativo' WHERE cli_id = $1;",
         values: [id],
     };
     await db.query(query);
