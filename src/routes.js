@@ -21,6 +21,8 @@ router.post("/admin/customers/:customerId/inactivate", checkPermission('ADMIN'),
 router.get("/customers/info", checkPermission('CUSTOMER'), customerController.getInfo)
 router.patch("/customers/info", checkPermission('CUSTOMER'), customerController.updateInfos)
 
+router.put("/customers/password", checkPermission('CUSTOMER'), customerController.updatePassword)
+
 router.get("/customers/address", checkPermission("CUSTOMER"), addressController.getAll)
 router.get("/customers/address/:addressId", checkPermission("CUSTOMER"), addressController.getAddressById)
 router.post("/customers/address", checkPermission("CUSTOMER"), addressController.create)
@@ -29,8 +31,7 @@ router.delete("/customers/address/:addressId", checkPermission("CUSTOMER"), addr
 
 router.get("/customers/cards", checkPermission("CUSTOMER"), cardController.getAll)
 router.post("/customers/cards", checkPermission("CUSTOMER"), cardController.create)
+router.patch("/customers/cards/:cardId", checkPermission("CUSTOMER"), cardController.update)
 router.delete("/customers/cards/:cardId", checkPermission("CUSTOMER"), cardController.delete)
-
-
 
 module.exports = router;

@@ -43,6 +43,15 @@ module.exports = {
             console.error(error);
             response.status(500).send({error: 'Ocorreu um erro ao excluir o cartão.'});
         }
-    }
+    },
 
+    update: async(request, response) => {
+        try {
+            await Card.update(request.userId, request.params.cardId, request.body)
+            response.status(200).send({success: "Cartão atualizado com sucesso"});
+        } catch (error) {
+            console.error(error);
+            response.status(500).send({error: 'Ocorreu um erro ao atualizar o cartão.'});
+        }
+    }
 }

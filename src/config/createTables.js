@@ -105,6 +105,21 @@ async function createTables(){
     FOR EACH ROW
     EXECUTE FUNCTION atualiza_padrao();
 
+    CREATE OR REPLACE FUNCTION atualiza_crt_preferencial() RETURNS TRIGGER AS $$
+    BEGIN
+        IF (NEW.crt_preferencial = TRUE) THEN
+            UPDATE cartoes SET crt_preferencial = FALSE WHERE crt_cli_id = NEW.crt_cli_id AND crt_id <> NEW.crt_id AND EXISTS (SELECT 1 FROM cartoes WHERE crt_cli_id = NEW.crt_cli_id AND crt_id <> NEW.crt_id AND crt_preferencial <> FALSE);
+        END IF;
+    
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE TRIGGER crt_preferencial_trigger
+    BEFORE INSERT OR UPDATE ON cartoes
+    FOR EACH ROW
+    EXECUTE FUNCTION atualiza_crt_preferencial();
+
     `
 
     db.query(sql)

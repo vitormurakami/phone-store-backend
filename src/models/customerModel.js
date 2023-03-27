@@ -92,40 +92,20 @@ Customer.updateInfos = async(updates, customerId) => {
         throw new Error('Erro ao cadastrar usuário');   
     }
 }
-/*
 
-Cliente.create = async(cliente) => {
-    const query = "INSERT INTO public.cliente (nome,data_nascimento,numero_documento,genero,numero_telefone, status, email, senha) VALUES ($1, $2, $3, $4, $5, $6, $7, $8); "
-    const values = [`${cliente.nome}`, `${cliente.data_nascimento}`, `${cliente.numero_documento}` , `${cliente.genero}`, `${cliente.numero_telefone}`, `${cliente.status}`, `${cliente.email}`, `${cliente.senha}`]
+Customer.updatePassword = async(updates, customerId) => {
+    if(updates.repitaNovaSenha != updates.novaSenha){
+        throw new Error('A nova senha e a senha repitida não são iguais');
+    }
 
-    return await db.query(query, values);
+    try {
+        const query = `UPDATE public.clientes SET cli_senha = $1 WHERE cli_id = $2`;
+        const values = [updates.novaSenha, customerId]
+        await db.query(query,values);        
+    } catch (error) {
+        throw new Error('Erro ao atualizar a senha do cliente'); 
+    }
 }
 
-Cliente.update = async(updates, id) => {
-    const columns = Object.keys(updates).map((key, index) => `${key} = $${index + 1}`).join(', ');
-  
-    const values = Object.values(updates);
-
-    const result = await db.query(
-        `UPDATE public.cliente SET ${columns} WHERE cliente_id = $${Object.keys(updates).length + 1}`,
-        [...values, id],
-      );
-    
-    return result;
-}
-
-Cliente.delete = async(id) => {
-    return db.query(`DELETE FROM public.cliente WHERE cliente_id = ${id}`)
-}
-
-Cliente.getOneById = async(id) => {
-    const query = {
-        text: "SELECT cliente_id, nome, status, to_char(data_nascimento, 'DD-MM-YYYY'), genero, numero_documento, email, numero_telefone FROM public.cliente WHERE cliente_id = $1",
-        values: [id],
-    };
-    const result = await db.query(query);
-    return result.rows[0];
-};
-*/
 
 module.exports = Customer;

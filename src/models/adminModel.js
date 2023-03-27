@@ -10,7 +10,7 @@ Admin.login = async(credential) => {
 }
 
 Admin.getCustomersByFilters = async (filters) => {
-    const { clienteId, nome, dataNascimentoMax, dataNascimentoMin, cpf, genero, telefone, statusAtivo, statusInativo, email } = filters;
+    const { clienteId, nome, dataNascimentoMax, dataNascimentoMin, cpf, genero, telefone, statusAtivo, statusInativo, email , status} = filters;
 
     let sql = `
         SELECT 
@@ -27,16 +27,24 @@ Admin.getCustomersByFilters = async (filters) => {
     if (dataNascimentoMin) sql += ` AND cli_dt_nascimento >= '${dataNascimentoMin}'`;
     if (dataNascimentoMax) sql += ` AND cli_dt_nascimento <= '${dataNascimentoMax}'`;
     if (cpf) sql += ` AND cli_cpf ILIKE '%${cpf}%'`;
-    if (genero) sql += ` AND cli_genero = '${genero}'`;
+    if (genero) {
+        if (Array.isArray(genero)){
+            sql += ` AND cli_genero IN ('${genero.join("','")}')`
+        }else{
+            sql += ` AND cli_genero IN ('${genero}')`
+        }
+    }
     if (telefone) sql += ` AND cli_telefone = '${telefone}'`;
-    if (statusAtivo && statusInativo) {
-        sql += " AND cli_status = 'Ativo' OR cli_status = 'Inativo'"
-    } else if (statusAtivo) {
-        sql += " AND cli_status = 'Ativo'"
-    } else if (statusInativo) {
-        sql += " AND cli_status = 'Inativo'"
-    };
+    if (status) {
+        if (Array.isArray(status)) {
+            sql += ` AND cli_status IN ('${status.join("','")}')`;
+        } else {
+            sql += ` AND cli_status = '${status}'`;
+        }
+    }
     if (email) sql += ` AND cli_email LIKE '%${email}%'`;
+
+    sql += ' ORDER BY cli_id ASC'
 
     return await db.query(sql);
 };

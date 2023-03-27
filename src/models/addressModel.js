@@ -41,7 +41,8 @@ Address.getAll = async(customerId) => {
         end_cobranca_padrao as "cobrancaPadrao",
         end_residencial_padrao as "residencialPadrao"
     FROM 
-        public.enderecos WHERE end_cli_id = $1`;
+        public.enderecos WHERE end_cli_id = $1
+    ORDER BY end_id ASC`;
     const value = [customerId];
 
     const result = await db.query(query,value);
