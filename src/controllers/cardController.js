@@ -8,7 +8,7 @@ module.exports = {
             response.status(200).send({success: "Cartão cadastrado com sucesso"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: "Ocorreu um erro ao cadastrar um cartão"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
@@ -18,7 +18,7 @@ module.exports = {
             response.status(200).send(outputCard);
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: "Ocorreu um erro ao consultar os cartões"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
@@ -28,7 +28,7 @@ module.exports = {
             response.status(200).send(outputCard);
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: "Ocorreu um erro ao consultar o cartão"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
@@ -41,17 +41,17 @@ module.exports = {
             response.status(200).send({success: "Cartão excluido com sucesso"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: 'Ocorreu um erro ao excluir o cartão.'});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
-    update: async(request, response) => {
+    setPreference: async(request, response) => {
         try {
-            await Card.update(request.userId, request.params.cardId, request.body)
-            response.status(200).send({success: "Cartão atualizado com sucesso"});
+            await Card.setPreference(request.userId, request.params.cardId, request.body)
+            response.status(200).send({success: "Cartão definido como preferencial com sucesso"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: 'Ocorreu um erro ao atualizar o cartão.'});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     }
 }

@@ -8,7 +8,7 @@ module.exports = {
             response.status(200).send({success: "Endereço cadastrado com sucesso"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: "Ocorreu um erro ao cadastrar um endereço"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode})
         }
     },
 
@@ -18,7 +18,7 @@ module.exports = {
             response.status(200).send(outputAddress);
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: "Ocorreu um erro ao consultar os endereços"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode})
         }
     },
 
@@ -28,7 +28,7 @@ module.exports = {
             response.status(200).send(outputAddress);
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: "Ocorreu um erro ao consultar o endereço"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode})
         }
     },
 
@@ -38,20 +38,17 @@ module.exports = {
             response.status(200).send({success: "Endereço atualizado com sucesso"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: "Ocorreu um erro ao atualizar o endereço"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode})
         }
     },
 
     delete: async(request, response) => {
         try {
             const outputAddress = await Address.delete(request.userId,request.params.addressId);
-            if (outputAddress.rowCount === 0) {
-                return response.status(404).send({error: 'Endereço não encontrado'});
-            }
             response.status(200).send({success: "Endereço excluido com sucesso"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: 'Ocorreu um erro ao excluir o endereço.'});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode})
         }
     }
 

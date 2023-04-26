@@ -31,7 +31,8 @@ router.delete("/customers/address/:addressId", checkPermission("CUSTOMER"), addr
 
 router.get("/customers/cards", checkPermission("CUSTOMER"), cardController.getAll)
 router.post("/customers/cards", checkPermission("CUSTOMER"), cardController.create)
-router.patch("/customers/cards/:cardId", checkPermission("CUSTOMER"), cardController.update)
+router.get("/customers/cards/:cardId", checkPermission("CUSTOMER"), cardController.getCardById)
+router.put("/customers/cards/:cardId", checkPermission("CUSTOMER"), cardController.setPreference)
 router.delete("/customers/cards/:cardId", checkPermission("CUSTOMER"), cardController.delete)
 
 module.exports = router;

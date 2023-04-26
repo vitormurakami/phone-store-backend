@@ -1,3 +1,4 @@
+const Address = require("../models/addressModel");
 const db = require("../config/db");
 
 const Customer = {};
@@ -6,7 +7,21 @@ Customer.login = async(credential) => {
     const query = `SELECT cli_id FROM clientes WHERE cli_email = $1 AND cli_senha = $2`;
     const value = [`${credential.email}`, `${credential.senha}`]
 
-    return await db.query(query,value);
+    try{
+        const outputCustomer = await db.query(query,value);
+        if(outputCustomer.rowCount === 0){
+            throw {messageCode: "CUS400001"}
+        }
+        return outputCustomer.rows[0].cli_id;
+    }catch (error){
+        console.error(error);
+        if (error.messageCode === "CUS400001") {
+            throw { message: "Credenciais inválidas", messageCode: "CUS400001", code: 400 };
+        }
+
+        throw {message: "Erro ao buscar credenciais do usuário", messageCode: "CUS500001", code: 500}
+
+    }
 }
 
 Customer.getInfo = async(customerId) => {
@@ -24,8 +39,14 @@ Customer.getInfo = async(customerId) => {
         clientes WHERE cli_id = $1`
     const value = [`${customerId}`]
 
-    const result = await db.query(query,value);
-    return result.rows[0]
+    try {
+        const result = await db.query(query,value);
+        return result.rows[0];
+    } catch (error) {
+        console.error(error);
+        throw {message: "Erro ao obter dados cadastrais do usuário", messageCode: "CUS500002", code: 500}
+    }
+    
 }
 
 Customer.create = async(customer) => {
@@ -35,40 +56,53 @@ Customer.create = async(customer) => {
     try{
         const emailExist = await db.query(`SELECT COUNT(*) FROM public.clientes WHERE cli_email = '${email}'`).then(result => result.rows[0].count);
         if (emailExist > 0) {
-            throw new Error('Email já cadastrado');
+            throw {messageCode: "CUS400002"}
         }
     
         const cpfExist = await db.query(`SELECT COUNT(*) FROM public.clientes WHERE cli_cpf = '${cpf}'`).then(result => result.rows[0].count);
         if (cpfExist > 0) {
-            throw new Error('Documento já cadastrado');
+            throw {messageCode: "CUS400003"}
         }
     
         const phoneExist = await db.query(`SELECT COUNT(*) FROM public.clientes WHERE cli_telefone = '${telefone}'`).then(result => result.rows[0].count);
         if (phoneExist > 0) {
-            throw new Error('Número de telefone já cadastrado');
+            throw {messageCode: "CUS400004"}
         }
 
-        const customerQuery = `INSERT INTO public.clientes (cli_nome, cli_dt_nascimento, cli_cpf, cli_genero, cli_telefone, cli_email, cli_senha) VALUES( $1, $2, $3, $4, $5, $6, $7)`;
+        if(!customer.nome || !customer.dataNascimento || !customer.cpf || !customer.genero || !customer.telefone || !customer.email || !customer.senha || !customer.enderecos || Object.keys(customer.enderecos).length === 0){
+            throw {messageCode: "CUS400005"}
+        }
+
+        if(!customer.enderecos.apelido || !customer.enderecos.tipoResidencia || !customer.enderecos.tipoLogradouro || !customer.enderecos.logradouro || !customer.enderecos.numero || !customer.enderecos.bairro || !customer.enderecos.cidade || !customer.enderecos.estado || !customer.enderecos.pais || !customer.enderecos.cep || !customer.enderecos.observacoes || !customer.enderecos.entregaPadrao || !customer.enderecos.cobrancaPadrao || !customer.enderecos.residencialPadrao){
+            throw {messageCode: "CUS400005"}
+        }
+
+        const customerQuery = `INSERT INTO public.clientes (cli_nome, cli_dt_nascimento, cli_cpf, cli_genero, cli_telefone, cli_email, cli_senha) VALUES( $1, $2, $3, $4, $5, $6, $7) RETURNING cli_id;`;
         const customerValues = [nome, dataNascimento, cpf, genero, telefone, email, senha];
     
-        await db.query(customerQuery, customerValues);
-    
-        const addressQuery = `INSERT INTO public.enderecos (end_cli_id, end_apelido, end_tipo_residencia, end_tipo_logradouro, end_logradouro, end_numero, end_bairro, end_cidade, end_estado, end_pais, end_cep, end_observacoes, end_entrega_padrao, end_cobranca_padrao, end_residencial_padrao) VALUES ((SELECT cli_id FROM public.clientes WHERE cli_email = '${email}'), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`;
+        const newCustomer = (await db.query(customerQuery, customerValues)).rows[0];
+
+        await Address.create(newCustomer.cli_id,enderecos);
         
-        const addressValues = [enderecos.apelido, enderecos.tipoResidencia, enderecos.tipoLogradouro, enderecos.logradouro, enderecos.numero, enderecos.bairro, enderecos.cidade, enderecos.estado, enderecos.pais, enderecos.cep, enderecos.observacoes, enderecos.entregaPadrao, enderecos.cobrancaPadrao, enderecos.residencialPadrao];
-    
-        await db.query(addressQuery, addressValues);
     }catch(error){
-        if (error.message === 'Email já cadastrado') {
-            throw new Error('Erro ao cadastrar usuário: Email já cadastrado');
-        } else if (error.message === 'Documento já cadastrado') {
-            throw new Error('Erro ao cadastrar usuário: Documento já cadastrado');
-        } else if (error.message === 'Número de telefone já cadastrado') {
-            throw new Error('Erro ao cadastrar usuário: Número de telefone já cadastrado');
-        } else {
-            console.log(error)
-            throw new Error('Erro ao cadastrar usuário');
+        console.log(error);
+        if (error.messageCode === "CUS400002") {
+            throw { message: "Email já cadastrado", messageCode: "CUS400002", code: 400 };
         }
+
+        if (error.messageCode === "CUS400003") {
+            throw { message: "CPF já cadastrado", messageCode: "CUS400003", code: 400 };
+        }
+
+        if (error.messageCode === "CUS400004") {
+            throw { message: "Número de telefone já cadastrado", messageCode: "CUS400004", code: 400 };
+        }
+
+        if (error.messageCode === "CUS400005") {
+            throw { message: "Dados obrigatórios não informado", messageCode: "CUS400005", code: 400 };
+        }
+
+        throw { message: "Erro ao cadastrar usuário", messageCode: "CUS5000003", code: 500 };
     }
 },
 
@@ -89,13 +123,19 @@ Customer.updateInfos = async(updates, customerId) => {
         const values = [customerId]
         await db.query(query,values);
     } catch (error) {
-        throw new Error('Erro ao cadastrar usuário');   
+        throw { message: "Erro ao atualizar dados do usuário", messageCode: "CUS5000004", code: 500 };  
     }
 }
 
 Customer.updatePassword = async(updates, customerId) => {
+    const senhaAtual = await db.query(`SELECT cli_senha FROM public.clientes WHERE cli_id = '${customerId}'`).then(result => result.rows[0].cli_senha);
+
+    if(senhaAtual != updates.senhaAtual){
+        throw {messageCode: "CUS400001"}
+    }
+
     if(updates.repitaNovaSenha != updates.novaSenha){
-        throw new Error('A nova senha e a senha repitida não são iguais');
+        throw {messageCode: "CUS400002"}
     }
 
     try {
@@ -103,9 +143,16 @@ Customer.updatePassword = async(updates, customerId) => {
         const values = [updates.novaSenha, customerId]
         await db.query(query,values);        
     } catch (error) {
-        throw new Error('Erro ao atualizar a senha do cliente'); 
+        if (error.messageCode === "CUS400001") {
+            throw { message: "Senha atual incorreta", messageCode: "CUS400001", code: 400 };
+        }
+
+        if (error.messageCode === "CUS400002") {
+            throw { message: "A nova senha e a senha repetida não são iguais", messageCode: "CUS400002", code: 400 };
+        }
+
+        throw { message: "Erro ao atualizar a senha do cliente", messageCode: "CUS500001", code: 500 };
     }
 }
-
 
 module.exports = Customer;

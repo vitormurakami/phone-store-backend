@@ -6,39 +6,32 @@ module.exports = {
     login: async (request, response) => {
         try {
             const outputAdmin = await Admin.login(request.body);
-            if(outputAdmin.rowCount === 0){
-                return response.status(401).send({error: "Dados Inválidos"});
-            }
-            const userId = outputAdmin.rows.at(0).admin_id;
-            const token = jwt.sign({userId: userId, userType: "ADMIN"}, process.env.JWT_SECRET_KEY, {expiresIn: 300})
+            const userId = outputAdmin;
+            const token = jwt.sign({userId: userId, userType: "ADMIN"}, process.env.JWT_SECRET_KEY, {expiresIn: 3600})
             return response.status(200).json({auth: true, token});   
         } catch (error) {
             console.log(error);
-            response.status(500).send({error: "Ocorreu um erro ao realizar o login"});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
     getAll: async (request, response) => {
         try {
             const outputCustomers = await Admin.getCustomersByFilters(request.query);
-            response.status(200).send(outputCustomers.rows);
+            response.status(200).send(outputCustomers);
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: 'Ocorreu um erro ao consular cliente.'});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
     getCustomerById: async (request, response) => {
         try {
             const outputCustomer = await Admin.geCustomerById(request.params.customerId);
-            if (!outputCustomer) {
-                response.status(404).send('Cliente não encontrado');
-            } else {
-                response.status(200).send(outputCustomer);
-            }
+            response.status(200).send(outputCustomer);
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: 'Ocorreu um erro ao consultar cliente.'});
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
@@ -48,7 +41,7 @@ module.exports = {
             response.status(200).send({success: "Cliente Ativado"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: 'Ocorreu um erro ao ativar cliente.'})
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     },
 
@@ -58,7 +51,7 @@ module.exports = {
             response.status(200).send({success: "Cliente Inavitado"});
         } catch (error) {
             console.error(error);
-            response.status(500).send({error: 'Ocorreu um erro ao inativar cliente.'})
+            response.status(error.code).send({error: error.message, messageCode: error.messageCode});
         }
     }
 

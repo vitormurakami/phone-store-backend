@@ -3,6 +3,9 @@ const db = require("../config/db")
 const Address = {};
 
 Address.create = async(customerId, address) => {
+
+    const {apelido, tipoResidencia, tipoLogradouro, logradouro, numero, bairro, cidade, estado, pais, cep, observacoes, entregaPadrao, cobrancaPadrao, residencialPadrao} = address;
+
     const query = `
     INSERT INTO public.enderecos (
         end_cli_id, 
@@ -23,9 +26,14 @@ Address.create = async(customerId, address) => {
     ) VALUES (
         (SELECT cli_id FROM public.clientes WHERE cli_id = '${customerId}'), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
     )`;
-    const values = [address.apelido, address.tipoResidencia, address.tipoLogradouro, address.logradouro, address.numero, address.bairro, address.cidade, address.estado, address.pais, address.cep, address.observacoes, address.entregaPadrao, address.cobrancaPadrao, address.residencialPadrao];
+    const values = [apelido, tipoResidencia, tipoLogradouro, logradouro, numero, bairro, cidade, estado, pais, cep, observacoes, entregaPadrao, cobrancaPadrao, residencialPadrao];
     
-    await db.query(query, values);
+    try{
+        await db.query(query, values);
+    }catch{
+        throw { message: "Erro ao cadastrar endereço", messageCode: "ADD500001", code: 500 };
+    }
+    
 }
 
 Address.getAll = async(customerId) => {
@@ -45,8 +53,12 @@ Address.getAll = async(customerId) => {
     ORDER BY end_id ASC`;
     const value = [customerId];
 
-    const result = await db.query(query,value);
-    return result.rows;
+    try {
+        const result = await db.query(query,value);
+        return result.rows;
+    } catch (error) {
+        throw { message: "Erro ao obter endereços", messageCode: "ADD500002", code: 500 };
+    }
 }
 
 Address.getAddressById = async(customerId, addressId) => {
@@ -71,16 +83,32 @@ Address.getAddressById = async(customerId, addressId) => {
         public.enderecos WHERE end_cli_id = $1 AND end_id = $2`;
     const value = [customerId, addressId];
 
-    const result = await db.query(query,value);
-    return result.rows[0];
+    try {
+        const result = await db.query(query,value);
+        return result.rows[0];      
+    } catch (error) {
+        throw { message: "Erro ao obter dados do endereço", messageCode: "ADD500003", code: 500 };
+    }
 }
 
 Address.delete = async(customerId, addressId) => {
-    return db.query(`
-    DELETE 
-    FROM public.enderecos 
-    WHERE end_cli_id = ${customerId} AND end_id = ${addressId}`
-    )
+    try {
+        const customerAddress = await Address.getAddressById(customerId, addressId);
+        if(!customerAddress) {
+            throw {messageCode: "ADD404001"};
+        }
+        return db.query(`
+            DELETE 
+            FROM public.enderecos 
+            WHERE end_cli_id = ${customerId} AND end_id = ${addressId}
+        `);
+    } catch (error) {
+        console.log(error);
+        if (error.messageCode === "ADD404001") {
+            throw { message: "Endereço não encontrado", messageCode: "ADD404001", code: 404 };
+        }
+        throw { message: "Erro ao excluir endereço", messageCode: "ADD500004", code: 500 };
+    }
 }
 
 Address.update = async(customerId, addressId, updates) => {
@@ -107,7 +135,7 @@ Address.update = async(customerId, addressId, updates) => {
         const values = [addressId, customerId]
         await db.query(query,values);
     } catch (error) {
-        throw new Error('Erro ao atualizar endereço');   
+        throw { message: "Erro ao atualizar endereço", messageCode: "ADD500005", code: 500 };
     }
 }
 
